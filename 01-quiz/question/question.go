@@ -19,8 +19,8 @@ type Question struct {
 // NewQuestion constructs a new Question struct
 func NewQuestion(question, answer string) *Question {
 	q := new(Question)
-	q.question = question
-	q.answer = answer
+	q.question = strings.TrimSpace(question)
+	q.answer = strings.TrimSpace(answer)
 	return q
 }
 
@@ -32,7 +32,7 @@ func (q *Question) Ask() int {
 	q.asked = true
 	q.UserInput()
 
-	if q.response == q.answer {
+	if strings.ToLower(q.response) == strings.ToLower(q.answer) {
 		score = 1
 		q.correct = true
 	}
@@ -46,7 +46,7 @@ func (q *Question) UserInput() {
 	text, _ := reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1) // for all platforms
 	text = strings.Replace(text, "\r", "", -1) // for Windows users
-	q.response = text
+	q.response = strings.TrimSpace(text)
 }
 
 // ShowCorrect displays the correct answer for any question

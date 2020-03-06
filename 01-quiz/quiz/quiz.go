@@ -38,7 +38,7 @@ func (qz *Quiz) Import(fileName string) {
 }
 
 // Play asks each question in turn
-func (qz *Quiz) Play() {
+func (qz *Quiz) Play(timeLimit int) {
 	fmt.Printf("Please answer the following %d questions:\n", len(qz.questions))
 	for _, q := range qz.questions {
 		qz.asked++
