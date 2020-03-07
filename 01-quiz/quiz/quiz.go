@@ -51,10 +51,18 @@ func (qz *Quiz) Play(timeLimit int) {
 
 	timer := time.NewTimer(time.Duration(timeLimit) * time.Second)
 
+QuizLoop:
 	for _, q := range qz.questions {
 		qz.asked++
 		fmt.Printf("%d: ", qz.asked)
-		qz.correct += q.Ask()
+		go q.Ask()
+		select {
+		case score := <-q.ChScore:
+			qz.correct += score
+		case <-timer.C:
+			fmt.Println("\nSorry, your time has run out!")
+			break QuizLoop
+		}
 	}
 }
 

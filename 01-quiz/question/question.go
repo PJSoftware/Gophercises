@@ -14,6 +14,7 @@ type Question struct {
 	response string
 	correct  bool
 	asked    bool
+	ChScore  chan int
 }
 
 // NewQuestion constructs a new Question struct
@@ -21,11 +22,13 @@ func NewQuestion(question, answer string) *Question {
 	q := new(Question)
 	q.question = strings.TrimSpace(question)
 	q.answer = strings.TrimSpace(answer)
+	q.ChScore = make(chan int)
 	return q
 }
 
 // Ask handles asking (and scoring the answer of) each question
-func (q *Question) Ask() int {
+// It should be called as a goroutine, and return its score on the channel
+func (q *Question) Ask() {
 	score := 0
 
 	fmt.Printf("%s = ? ", q.question)
@@ -40,7 +43,7 @@ func (q *Question) Ask() int {
 		q.correct = true
 	}
 
-	return score
+	q.ChScore <- score
 }
 
 // UserInput reads the user's response
