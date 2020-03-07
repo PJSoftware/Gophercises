@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"time"
 
@@ -18,7 +19,7 @@ type Quiz struct {
 }
 
 // Import reads specified CSV file and sets up the quiz
-func (qz *Quiz) Import(fileName string) {
+func (qz *Quiz) Import(fileName string, shuffle bool) {
 	csvFile, err := os.Open(fileName)
 	if err != nil {
 		exit(fmt.Sprintf("Unable to open '%s'\n(Error: %v)", fileName, err))
@@ -35,6 +36,10 @@ func (qz *Quiz) Import(fileName string) {
 			exit(fmt.Sprintf("Error reading CSV file: %v", err))
 		}
 		qz.addQuestion(row[0], row[1])
+	}
+
+	if shuffle {
+		qz.shuffleQuestions()
 	}
 }
 
@@ -89,6 +94,13 @@ func (qz *Quiz) Score() {
 
 func (qz *Quiz) addQuestion(q, a string) {
 	qz.questions = append(qz.questions, question.NewQuestion(q, a))
+}
+
+func (qz *Quiz) shuffleQuestions() {
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(qz.questions), func(i, j int) {
+		qz.questions[i], qz.questions[j] = qz.questions[j], qz.questions[i]
+	})
 }
 
 func exit(msg string) {
