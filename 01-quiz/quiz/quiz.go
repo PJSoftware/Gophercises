@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"../question"
 )
@@ -39,7 +40,17 @@ func (qz *Quiz) Import(fileName string) {
 
 // Play asks each question in turn
 func (qz *Quiz) Play(timeLimit int) {
-	fmt.Printf("Please answer the following %d questions:\n", len(qz.questions))
+	nq := len(qz.questions)
+	fmt.Printf("Please answer the following %d questions:\n", nq)
+	if timeLimit > 0 {
+		if timeLimit < nq {
+			timeLimit = nq
+		}
+		fmt.Printf("(You have %d seconds to finish!)\n", timeLimit)
+	}
+
+	timer := time.NewTimer(time.Duration(timeLimit) * time.Second)
+
 	for _, q := range qz.questions {
 		qz.asked++
 		fmt.Printf("%d: ", qz.asked)

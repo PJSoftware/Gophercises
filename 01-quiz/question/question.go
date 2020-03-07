@@ -30,7 +30,10 @@ func (q *Question) Ask() int {
 
 	fmt.Printf("%s = ? ", q.question)
 	q.asked = true
-	q.UserInput()
+	c := make(chan string)
+
+	go q.UserInput(c)
+	q.response = <-c
 
 	if strings.ToLower(q.response) == strings.ToLower(q.answer) {
 		score = 1
@@ -41,12 +44,12 @@ func (q *Question) Ask() int {
 }
 
 // UserInput reads the user's response
-func (q *Question) UserInput() {
+func (q *Question) UserInput(c chan string) {
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1) // for all platforms
 	text = strings.Replace(text, "\r", "", -1) // for Windows users
-	q.response = strings.TrimSpace(text)
+	c <- strings.TrimSpace(text)
 }
 
 // ShowCorrect displays the correct answer for any question
