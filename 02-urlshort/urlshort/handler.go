@@ -1,6 +1,8 @@
 package urlshort
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"gopkg.in/yaml.v2"
@@ -39,8 +41,22 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 //
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
-func YAMLHandler(yamlBytes []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	pathURLs, err := parseYAML(yamlBytes)
+func YAMLHandler(yamlFile string, fallback http.Handler) (http.HandlerFunc, error) {
+	pathURLs, err := parseYAML(yamlFile)
+	if err != nil {
+		return nil, err
+	}
+	pathsToUrls := buildMap(pathURLs)
+	return MapHandler(pathsToUrls, fallback), nil
+}
+
+// JSONHandler will parse the provided JSON and then return
+// an http.HandlerFunc (which also implements http.Handler)
+// that will attempt to map any paths to their corresponding
+// URL. If the path is not provided in the JSON, then the
+// fallback http.Handler will be called instead.
+func JSONHandler(jsonFile string, fallback http.Handler) (http.HandlerFunc, error) {
+	pathURLs, err := parseJSON(jsonFile)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +69,33 @@ type pathURL struct {
 	URL  string `yaml:"url"`
 }
 
-func parseYAML(data []byte) ([]pathURL, error) {
-	var pathURLs []pathURL
-	err := yaml.Unmarshal(data, &pathURLs)
+func parseYAML(yamlFile string) ([]pathURL, error) {
+	yamlIO, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
 		return nil, err
 	}
+
+	var pathURLs []pathURL
+	err = yaml.Unmarshal(yamlIO, &pathURLs)
+	if err != nil {
+		return nil, err
+	}
+
+	return pathURLs, nil
+}
+
+func parseJSON(jsonFile string) ([]pathURL, error) {
+	jsonIO, err := ioutil.ReadFile(jsonFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathURLs []pathURL
+	err = json.Unmarshal(jsonIO, &pathURLs)
+	if err != nil {
+		return nil, err
+	}
+
 	return pathURLs, nil
 }
 
