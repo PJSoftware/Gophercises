@@ -41,8 +41,8 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 //
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
-func YAMLHandler(yamlFile string, fallback http.Handler) (http.HandlerFunc, error) {
-	pathURLs, err := parseYAML(yamlFile)
+func YAMLHandler(file string, fallback http.Handler) (http.HandlerFunc, error) {
+	pathURLs, err := parseData(yaml.Unmarshal, file)
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +55,8 @@ func YAMLHandler(yamlFile string, fallback http.Handler) (http.HandlerFunc, erro
 // that will attempt to map any paths to their corresponding
 // URL. If the path is not provided in the JSON, then the
 // fallback http.Handler will be called instead.
-func JSONHandler(jsonFile string, fallback http.Handler) (http.HandlerFunc, error) {
-	pathURLs, err := parseJSON(jsonFile)
+func JSONHandler(file string, fallback http.Handler) (http.HandlerFunc, error) {
+	pathURLs, err := parseData(json.Unmarshal, file)
 	if err != nil {
 		return nil, err
 	}
@@ -64,34 +64,20 @@ func JSONHandler(jsonFile string, fallback http.Handler) (http.HandlerFunc, erro
 	return MapHandler(pathsToUrls, fallback), nil
 }
 
+type umFunc func([]byte, interface{}) error
 type pathURL struct {
 	Path string `yaml:"path"`
 	URL  string `yaml:"url"`
 }
 
-func parseYAML(yamlFile string) ([]pathURL, error) {
-	yamlIO, err := ioutil.ReadFile(yamlFile)
+func parseData(unmarshal umFunc, file string) ([]pathURL, error) {
+	yamlIO, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
 	var pathURLs []pathURL
-	err = yaml.Unmarshal(yamlIO, &pathURLs)
-	if err != nil {
-		return nil, err
-	}
-
-	return pathURLs, nil
-}
-
-func parseJSON(jsonFile string) ([]pathURL, error) {
-	jsonIO, err := ioutil.ReadFile(jsonFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathURLs []pathURL
-	err = json.Unmarshal(jsonIO, &pathURLs)
+	err = unmarshal(yamlIO, &pathURLs)
 	if err != nil {
 		return nil, err
 	}
