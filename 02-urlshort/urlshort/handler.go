@@ -2,6 +2,8 @@ package urlshort
 
 import (
 	"net/http"
+
+	"gopkg.in/yaml.v2"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -37,7 +39,20 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 //
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
-func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	// TODO: Implement this...
-	return nil, nil
+func YAMLHandler(yamlBytes []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	var pathURLs []pathURL
+	err := yaml.Unmarshal(yamlBytes, &pathURLs)
+	if err != nil {
+		return nil, err
+	}
+	pathsToUrls := make(map[string]string)
+	for _, pu := range pathURLs {
+		pathsToUrls[pu.Path] = pu.URL
+	}
+	return MapHandler(pathsToUrls, fallback), nil
+}
+
+type pathURL struct {
+	Path string `yaml:"path"`
+	URL  string `yaml:"url"`
 }
